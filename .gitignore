@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/assets/units/SkeletonWarrior_2HandAxe/Animations/
+/assets/units/SkeletonWarrior_2HandAxe/Models/
+/assets/units/SkeletonWarrior_2HandAxe/Textures/
