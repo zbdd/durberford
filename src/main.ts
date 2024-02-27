@@ -3,6 +3,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import type { Object3D } from 'three';
+import { Group } from 'three';
 
 let camera: THREE.PerspectiveCamera, scene: THREE.Scene, renderer, stats;
 const mixers: THREE.AnimationMixer[] = [];
@@ -46,6 +47,7 @@ grid.material.transparent = true;
 scene.add(grid);
 const loader = new FBXLoader();
 const gameObjects: Object3D[] = [];
+const parentObject = new Group();
 
 const loadModelTexture = async (
     modelPath: string,
@@ -65,7 +67,6 @@ const loadModelTexture = async (
             action.play();
         });
     }
-
     object.traverse((child) => {
         if (child.isMesh) {
             const texture = new THREE.TextureLoader().load(texturePath);
@@ -77,20 +78,22 @@ const loadModelTexture = async (
         }
     });
 
-    gameObjects.push(object);
     if (object.name === 'axe') {
-        object.position.set(-60, 80, 0);
+        //object.position.set(-60, 80, 0);
+        object.scale.set(1,1,-1)
     }
     return object;
 };
 const loadObjects = async (): Promise<void> => {
-    const main = await loadModelTexture(
-        'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_body_mesh.fbx',
-        'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_body_D.png',
-        'body',
-        'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
+    parentObject.add(
+        await loadModelTexture(
+            'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_body_mesh.fbx',
+            'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_body_D.png',
+            'body',
+            'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
+        ),
     );
-    main.add(
+    parentObject.add(
         await loadModelTexture(
             'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_set1_mesh.fbx',
             'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_set1_D.png',
@@ -98,14 +101,21 @@ const loadObjects = async (): Promise<void> => {
             'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
         ),
     );
-    main.add(
-        await loadModelTexture(
-            'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_2h_axe.fbx',
-            'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_2HAxe_D.png',
-            'axe',
-        ),
+    const axe = await loadModelTexture(
+        'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_2h_axe.fbx',
+        'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_2HAxe_D.png',
+        'axe',
     );
-    scene.add(main);
+    scene.add(parentObject);
+    console.log(parentObject);
+    const slots = [];
+    parentObject.traverse((child) => {
+        const name = child.name.trim(); // Exported bones don't have dots in their names
+        console.log(name);
+        slots[name] = child;
+    });
+    console.log(slots);
+    slots['mixamorigRightHandIndex1'].add(axe);
 };
 
 void loadObjects();
