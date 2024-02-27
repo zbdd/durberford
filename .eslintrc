@@ -1,0 +1,62 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 6,
+        "sourceType": "module",
+        "project": ["./tsconfig.json"]
+    },
+    "plugins": ["@typescript-eslint", "prettier"],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
+    ],
+    "rules": {
+        "eqeqeq": ["error", "always"],
+        "no-proto": "error",
+        "no-self-compare": "error",
+        "no-useless-return": "error",
+        "prettier/prettier": "error",
+        "prefer-arrow-callback": "error",
+        "@typescript-eslint/unbound-method": "error",
+        "@typescript-eslint/ban-types": "warn",
+        "@typescript-eslint/no-empty-function": "warn",
+        "@typescript-eslint/no-shadow": "warn",
+        "@typescript-eslint/no-floating-promises": "error",
+        "@typescript-eslint/prefer-readonly": "error",
+        "@typescript-eslint/explicit-member-accessibility": [
+            "error",
+            {
+                "accessibility": "explicit",
+                "overrides": {
+                    "constructors": "no-public"
+                }
+            }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+            "warn",
+            {
+                "argsIgnorePattern": "^_",
+                "varsIgnorePattern": "^_",
+                "caughtErrorsIgnorePattern": "^_"
+            }
+        ],
+        "@typescript-eslint/consistent-type-imports": [
+            "error",
+            { "prefer": "type-imports", "fixStyle": "separate-type-imports" }
+        ],
+        "@typescript-eslint/consistent-type-definitions": ["error", "type"]
+    },
+    "ignorePatterns": [
+        "node_modules",
+        "dist",
+        "public",
+        "vite.config.ts",
+        "storybook-static",
+        "jest.config.js",
+        "**/*.test.ts",
+        "package-version.js"
+    ]
+}
