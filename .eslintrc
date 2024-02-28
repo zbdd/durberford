@@ -23,6 +23,7 @@
         "@typescript-eslint/unbound-method": "error",
         "@typescript-eslint/ban-types": "warn",
         "@typescript-eslint/no-empty-function": "warn",
+        "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-shadow": "warn",
         "@typescript-eslint/no-floating-promises": "error",
         "@typescript-eslint/prefer-readonly": "error",
