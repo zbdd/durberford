@@ -1,17 +1,17 @@
-import type { Object3D } from 'three';
-import * as THREE from 'three';
+import type { AnimationMixer, Object3D } from 'three';
+import { Clock, PerspectiveCamera, WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { View } from './view';
 import { Loader } from './loader';
 
-const mixers: THREE.AnimationMixer[] = [];
-const clock = new THREE.Clock();
+const mixers: AnimationMixer[] = [];
+const clock = new Clock();
 
 const container = document.createElement('div');
 document.body.appendChild(container);
 
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
+const camera = new PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 2000);
 camera.position.set(100, 200, 300);
 
 const view = new View();
@@ -56,7 +56,7 @@ const loadObjects = async (): Promise<void> => {
 
 void loadObjects();
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
