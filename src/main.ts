@@ -24,13 +24,19 @@ const loadObjects = async (): Promise<void> => {
                 modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_body_mesh.fbx',
                 texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_body_D.png',
                 name: 'skeleton-body',
-                animationPath: 'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
+                animationDetail: {
+                    path: 'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
+                    name: 'ultimate',
+                },
             },
             {
                 modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_set1_mesh.fbx',
                 texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_set1_D.png',
                 name: 'skeleton-clothing',
-                animationPath: 'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
+                animationDetail: {
+                    path: 'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
+                    name: 'ultimate',
+                },
             },
             {
                 modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_2h_axe.fbx',
@@ -45,31 +51,7 @@ const loadObjects = async (): Promise<void> => {
         ],
     ]);
     gameObjects.forEach((gameObject) => view.add(gameObject));
-    // const gameGroup: GameObject[] = [];
-
-    // gameObjects.forEach((loadedObject) => {
-    //     const { gameObject, attachTo, onAttached } = loadedObject;
-    //     const characterName = gameObject.name.split('-')[0];
-    //     const foundObj = gameGroup.find((obj: GameObject) => obj.name.split('-')[0] === characterName);
-    //
-    //     if (foundObj) {
-    //         if (attachTo) {
-    //             foundObj.traverse((child) => {
-    //                 if (child.name.trim() === attachTo) {
-    //                     child.add(gameObject);
-    //                     onAttached?.(gameObject);
-    //                 }
-    //             });
-    //         } else {
-    //             foundObj.add(gameObject);
-    //         }
-    //     } else {
-    //         gameGroup.push(gameObject);
-    //         view.add(gameObject);
-    //     }
-    // });
-    // gameObjects[0].gameObject.getActions()[0]?.play();
-    // gameObjects[1].gameObject.getActions()[0]?.play();
+    gameObjects[0].playAction('ultimate');
 };
 
 void loadObjects();
