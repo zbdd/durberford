@@ -2,6 +2,7 @@ import type { Object3D } from 'three';
 import * as THREE from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import type { GameObject } from './view';
 import { View } from './view';
 import { Loader } from './loader';
 
@@ -35,13 +36,34 @@ const loadObjects = async (): Promise<void> => {
             modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_2h_axe.fbx',
             texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_2HAxe_D.png',
             name: 'skeleton-axe',
-            onComplete: (object: Object3D) => {
+            attachTo: 'weapon_end',
+            onAttached: (object: Object3D) => {
                 object.rotateY(90);
                 object.rotateZ(90);
             },
         },
     ]);
-    gameObjects.forEach((gameObject) => view.add(gameObject));
+    const gameGroup: GameObject[] = [];
+
+    gameObjects.forEach((loadedObject) => {
+        const { gameObject, attachTo, onAttached } = loadedObject;
+        const characterName = gameObject.name.split('-')[0];
+        const foundObj = gameGroup.find((obj: GameObject) => obj.name.split('-')[0] === characterName);
+
+        if (foundObj) {
+            if (attachTo) {
+                foundObj.traverse((child) => {
+                    if (child.name.trim() === attachTo) {
+                        child.add(gameObject);
+                        onAttached?.(gameObject);
+                    }
+                });
+            } else foundObj.add(gameObject);
+        } else {
+            gameGroup.push(gameObject);
+            view.add(gameObject);
+        }
+    });
 };
 
 void loadObjects();

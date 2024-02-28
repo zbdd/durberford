@@ -8,7 +8,8 @@ export type GameAssetProps = {
     modelPath: string;
     texturePath: string;
     animationPath?: string;
-    onComplete?: (object: Object3D) => void;
+    attachTo?: string;
+    onAttached?: (object: Object3D) => void;
 };
 
 export class Loader extends FBXLoader {
@@ -20,13 +21,16 @@ export class Loader extends FBXLoader {
         this.mixers = mixers;
     }
 
-    public async loadGameAssets(assets: GameAssetProps[]): Promise<GameObject[]> {
-        const gameObjects: GameObject[] = [];
+    public async loadGameAssets(
+        assets: GameAssetProps[],
+    ): Promise<{ gameObject: GameObject; attachTo?: string; onAttached?: (object: Object3D) => void }[]> {
+        const gameObjects: { gameObject: GameObject; attachTo?: string; onAttached?: (object: Object3D) => void }[] =
+            [];
 
         for (const asset of assets) {
             const loadedObject = await this.loadAsset(asset);
-            gameObjects.push(
-                new GameObject({
+            gameObjects.push({
+                gameObject: new GameObject({
                     gameObjectProps: [
                         {
                             name: asset.name,
@@ -35,7 +39,9 @@ export class Loader extends FBXLoader {
                         },
                     ],
                 }),
-            );
+                attachTo: asset.attachTo,
+                onAttached: asset.onAttached,
+            });
         }
 
         return gameObjects;
@@ -70,7 +76,6 @@ export class Loader extends FBXLoader {
             }
         });
 
-        asset.onComplete?.(modelObject);
         return {
             modelObject,
             actions,
