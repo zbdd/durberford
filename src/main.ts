@@ -80,6 +80,7 @@ const loadModelTexture = async (
         //object.position.set(-60, 80, 0);
         //object.scale.set(1, 1, 1);
         object.rotateY(90);
+        object.rotateZ(90);
     }
     return object;
 };
