@@ -4,12 +4,12 @@ import { Group } from 'three';
 export type GameObjectProps = {
     name: string;
     object: Object3D;
-    actions: { name: string; action: AnimationAction }[];
+    actions: AnimationAction[];
     attachTo?: Object3D;
 };
 
 export class GameObject extends Group {
-    private actions: { name: string; action: AnimationAction }[];
+    private actions: AnimationAction[];
 
     constructor({ gameObjectProps }: { gameObjectProps: GameObjectProps[] }) {
         super();
@@ -25,17 +25,22 @@ export class GameObject extends Group {
         });
     }
 
-    public getActions(): { name: string; action: AnimationAction }[] {
-        return this.actions;
+    public getActions(): string[] {
+        const uniqueClipNames: string[] = [];
+        this.actions.forEach((action) => {
+            const clipName = action.getClip().name;
+            if (!uniqueClipNames.includes(clipName)) uniqueClipNames.push(clipName);
+        });
+        return uniqueClipNames;
     }
 
-    public setActions(actions: { name: string; action: AnimationAction }[]) {
+    public setActions(actions: AnimationAction[]) {
         this.actions = actions;
     }
 
     public playAction(name: string): void {
         this.actions.forEach((action) => {
-            if (action.name === name) action.action.play();
+            if (action.getClip().name === name) action.play();
         });
     }
 }

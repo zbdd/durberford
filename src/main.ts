@@ -20,6 +20,7 @@ const loader = new Loader({ mixers });
 const loadObjects = async (): Promise<void> => {
     const gameObjects = await loader.loadGameAssets({});
     gameObjects.forEach((gameObject) => view.add(gameObject));
+    console.log(gameObjects[0].getActions());
     gameObjects[0].playAction('ultimate');
 };
 

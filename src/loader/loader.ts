@@ -5,11 +5,16 @@ import type { AnimationAction, Group, Object3D, Object3DEventMap } from 'three';
 import { AnimationMixer, TextureLoader } from 'three';
 import { getSkeletonBundle } from './bundles';
 
+export type GameAssetGroup = {
+    name: string;
+    assets: GameAssetProps[];
+};
+
 export type GameAssetProps = {
     name: string;
     modelPath: string;
     texturePath: string;
-    animationDetail?: { name: string; path: string };
+    animationPaths: string[];
     attachTo?: string;
     onAttached?: (object: Object3D) => void;
 };
@@ -27,7 +32,7 @@ export class Loader extends FBXLoader {
         assetsGroup,
         loadDefaults = true,
     }: {
-        assetsGroup?: GameAssetProps[][];
+        assetsGroup?: GameAssetGroup[];
         loadDefaults?: boolean;
     }): Promise<GameObject[]> {
         const gameObjects: GameObject[] = [];
@@ -38,12 +43,12 @@ export class Loader extends FBXLoader {
         for (const group of assetsGroup) {
             const objectsAndActions: {
                 modelObject: Object3D;
-                actions: { name: string; action: AnimationAction }[];
+                actions: AnimationAction[];
                 attachTo?: string;
                 onAttached?: (object: Object3D) => void;
             }[] = [];
 
-            for (const asset of group) {
+            for (const asset of group.assets) {
                 const loadedObject = await this.loadAsset(asset);
                 objectsAndActions.push(loadedObject);
             }
@@ -81,22 +86,27 @@ export class Loader extends FBXLoader {
 
     private async loadAsset(asset: GameAssetProps): Promise<{
         modelObject: Group<Object3DEventMap>;
-        actions: { name: string; action: AnimationAction }[];
+        actions: AnimationAction[];
         attachTo?: string;
         onAttached?: (object: Object3D) => void;
     }> {
         const modelObject = await this.loadAsync(asset.modelPath);
         if (!modelObject) throw Error(`Failed to load asset: ${asset.name}`);
 
-        const actions: { name: string; action: AnimationAction }[] = [];
+        const actions: AnimationAction[] = [];
 
         modelObject.name = asset.name;
 
-        if (asset.animationDetail) {
-            const animationObject = await this.loadAsync(asset.animationDetail.path);
+        if (asset.animationPaths.length > 0) {
             const mixer = new AnimationMixer(modelObject);
-            this.mixers.push(mixer);
-            actions.push({ name: asset.animationDetail.name, action: mixer.clipAction(animationObject.animations[0]) });
+            for (const path of asset.animationPaths) {
+                const animationObject = await this.loadAsync(path);
+
+                if (animationObject) {
+                    this.mixers.push(mixer);
+                    actions.push(mixer.clipAction(animationObject.animations[0]));
+                }
+            }
         }
 
         modelObject.traverse((child: any) => {
