@@ -2,8 +2,10 @@ import type { AnimationMixer } from 'three';
 import { Clock, PerspectiveCamera, WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import type { GameObject } from './view';
 import { View } from './view';
 import { Loader } from './loader';
+import { addControlPanel } from './view/debug';
 
 const mixers: AnimationMixer[] = [];
 const clock = new Clock();
@@ -17,14 +19,18 @@ camera.position.set(100, 200, 300);
 const view = new View();
 const loader = new Loader({ mixers });
 
+const gameWrapper = document.createElement('div');
+
+const gameObjects: GameObject[] = [];
+
 const loadObjects = async (): Promise<void> => {
-    const gameObjects = await loader.loadGameAssets({});
+    gameObjects.push(...(await loader.loadGameAssets({})));
     gameObjects.forEach((gameObject) => view.add(gameObject));
-    console.log(gameObjects[0].getActions());
-    gameObjects[0].playAction('ultimate');
 };
 
-void loadObjects();
+void loadObjects().then(() => {
+    createControlPanel();
+});
 
 const renderer = new WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
@@ -52,7 +58,7 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta() * 0.1;
+    const delta = clock.getDelta() * 0.0666;
 
     mixers.forEach((mixer) => {
         mixer.update(delta);
@@ -68,3 +74,9 @@ function render() {
 }
 
 animate();
+
+function createControlPanel() {
+    const controlPanel = addControlPanel({ view, gameObject: gameObjects[0], animations: gameObjects[0].getActions() });
+    gameWrapper.appendChild(controlPanel.button);
+    document.body.appendChild(gameWrapper);
+}

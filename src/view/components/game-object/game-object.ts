@@ -10,12 +10,14 @@ export type GameObjectProps = {
 
 export class GameObject extends Group {
     private actions: AnimationAction[];
+    private readonly actionPlaying: AnimationAction | undefined;
 
     constructor({ gameObjectProps }: { gameObjectProps: GameObjectProps[] }) {
         super();
 
         this.name = gameObjectProps?.[0].name;
         this.actions = [];
+        this.actionPlaying = undefined;
 
         gameObjectProps.forEach((gameObject) => {
             if (gameObject.attachTo) gameObject.attachTo.add(gameObject.object);
@@ -34,13 +36,24 @@ export class GameObject extends Group {
         return uniqueClipNames;
     }
 
-    public setActions(actions: AnimationAction[]) {
+    public setActions(actions: AnimationAction[]): void {
         this.actions = actions;
     }
 
-    public playAction(name: string): void {
+    public stopActions(): void {
         this.actions.forEach((action) => {
-            if (action.getClip().name === name) action.play();
+            action.stop();
+        });
+    }
+
+    public playAction(name: string, fadeInDuration = 0): void {
+        this.actions.forEach((action) => {
+            if (action.getClip().name === name) {
+                if (fadeInDuration > 0) {
+                    action.fadeIn(fadeInDuration);
+                    this.actionPlaying?.fadeOut(fadeInDuration);
+                } else action.play();
+            }
         });
     }
 }
