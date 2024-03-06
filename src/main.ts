@@ -1,4 +1,4 @@
-import type { AnimationMixer, Object3D } from 'three';
+import type { AnimationMixer } from 'three';
 import { Clock, PerspectiveCamera, WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -18,38 +18,7 @@ const view = new View();
 const loader = new Loader({ mixers });
 
 const loadObjects = async (): Promise<void> => {
-    const gameObjects = await loader.loadGameAssets([
-        [
-            {
-                modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_body_mesh.fbx',
-                texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_body_D.png',
-                name: 'skeleton-body',
-                animationDetail: {
-                    path: 'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
-                    name: 'ultimate',
-                },
-            },
-            {
-                modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_set1_mesh.fbx',
-                texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_set1_D.png',
-                name: 'skeleton-clothing',
-                animationDetail: {
-                    path: 'assets/units/SkeletonWarrior_2HandAxe/Animations/SkeletonWarrior_2h_ultimate.fbx',
-                    name: 'ultimate',
-                },
-            },
-            {
-                modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_2h_axe.fbx',
-                texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_2HAxe_D.png',
-                name: 'skeleton-axe',
-                attachTo: 'weapon_end',
-                onAttached: (object: Object3D) => {
-                    object.rotateY(90);
-                    object.rotateZ(90);
-                },
-            },
-        ],
-    ]);
+    const gameObjects = await loader.loadGameAssets({});
     gameObjects.forEach((gameObject) => view.add(gameObject));
     gameObjects[0].playAction('ultimate');
 };

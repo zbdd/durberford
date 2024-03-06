@@ -3,6 +3,7 @@ import type { GameObjectProps } from '../view';
 import { GameObject } from '../view';
 import type { AnimationAction, Group, Object3D, Object3DEventMap } from 'three';
 import { AnimationMixer, TextureLoader } from 'three';
+import { getSkeletonBundle } from './bundles';
 
 export type GameAssetProps = {
     name: string;
@@ -22,8 +23,18 @@ export class Loader extends FBXLoader {
         this.mixers = mixers;
     }
 
-    public async loadGameAssets(assetsGroup: GameAssetProps[][]): Promise<GameObject[]> {
+    public async loadGameAssets({
+        assetsGroup,
+        loadDefaults = true,
+    }: {
+        assetsGroup?: GameAssetProps[][];
+        loadDefaults?: boolean;
+    }): Promise<GameObject[]> {
         const gameObjects: GameObject[] = [];
+
+        if (!assetsGroup) assetsGroup = [];
+        if (loadDefaults) assetsGroup.push(getSkeletonBundle());
+
         for (const group of assetsGroup) {
             const objectsAndActions: {
                 modelObject: Object3D;
