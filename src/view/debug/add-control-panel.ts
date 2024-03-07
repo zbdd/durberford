@@ -49,18 +49,25 @@ export const addControlPanel = ({
         );
     const animationState = {
         name: animations[0],
+        fadeDuration: 0,
     };
     unitPage.addBinding(animationState, 'name', {
         label: 'name',
         options: animationOptions,
+    });
+    unitPage.addBinding(animationState, 'fadeDuration', {
+        label: 'fade duration (sec)',
+        step: 0.1,
+        min: 0,
+        max: 4,
     });
     unitPage
         .addButton({
             title: 'Play',
         })
         .on('click', () => {
-            gameObject.stopActions();
-            gameObject.playAction(animationState.name);
+            gameObject.stopActions(1);
+            gameObject.playAction(animationState.name, 1, true);
         });
     unitPage
         .addButton({

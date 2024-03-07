@@ -40,19 +40,23 @@ export class GameObject extends Group {
         this.actions = actions;
     }
 
-    public stopActions(): void {
-        this.actions.forEach((action) => {
-            action.stop();
+    public stopActions(fadeDurationSeconds = 0): void {
+        this.actions.forEach((action, index) => {
+            if (action.isRunning() && fadeDurationSeconds > 0) {
+                action.fadeOut(fadeDurationSeconds);
+                setTimeout(() => this.actions[index].stop(), fadeDurationSeconds * 1000);
+            } else action.stop();
         });
     }
 
-    public playAction(name: string, fadeInDuration = 0): void {
+    public playAction(name: string, fadeInDuration = 0, isLoop: boolean): void {
         this.actions.forEach((action) => {
-            if (action.getClip().name === name) {
+            if (action.getClip().name === name && !action.isRunning()) {
                 if (fadeInDuration > 0) {
                     action.fadeIn(fadeInDuration);
                     this.actionPlaying?.fadeOut(fadeInDuration);
-                } else action.play();
+                }
+                action.play();
             }
         });
     }
