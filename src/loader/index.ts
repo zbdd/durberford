@@ -1,2 +1,2 @@
-export { Loader } from './loader.ts';
+export { UnitAsset } from './bundles';
 export type { GameAssetProps } from './loader.ts';

@@ -1,1 +1,1 @@
-export { getSkeletonBundle } from './skeleton-bundle';
+export { UnitAsset } from './skeleton-bundle';

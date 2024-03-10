@@ -1,30 +1,47 @@
-import type { AnimationAction, Object3D } from 'three';
+import type { AnimationAction, AnimationMixer, Object3D } from 'three';
 import { Group } from 'three';
 
 export type GameObjectProps = {
     name: string;
     object: Object3D;
+    mixer: AnimationMixer;
     actions: AnimationAction[];
     attachTo?: Object3D;
 };
 
 export class GameObject extends Group {
     private actions: AnimationAction[];
+    private readonly mixer: AnimationMixer;
     private readonly actionPlaying: AnimationAction | undefined;
+    private readonly children: GameObject[];
 
     constructor({ gameObjectProps }: { gameObjectProps: GameObjectProps[] }) {
         super();
 
-        this.name = gameObjectProps?.[0].name;
+        const gameObject = gameObjectProps.shift();
+        if (!gameObject) throw Error(`Cannot instantiate GameObject without GameObjectProps`);
+
+        console.log(gameObject);
+        this.name = gameObject.name;
+        this.mixer = gameObject.mixer;
+        this.add(gameObject.object);
+
+        this.children = [];
         this.actions = [];
         this.actionPlaying = undefined;
 
-        gameObjectProps.forEach((gameObject) => {
-            if (gameObject.attachTo) gameObject.attachTo.add(gameObject.object);
-            else this.add(gameObject.object);
+        gameObjectProps.forEach((nextObject) => {
+            if (nextObject.attachTo) nextObject.attachTo.add(nextObject.object);
+            else this.add(nextObject.object);
 
-            this.actions.push(...gameObject.actions);
+            this.actions.push(...nextObject.actions);
+            this.children.push(new GameObject({ gameObjectProps: [nextObject] }));
         });
+    }
+
+    public update(deltaSec: number): void {
+        this.mixer.update(deltaSec);
+        this.children.forEach((child) => child.update(deltaSec));
     }
 
     public getActions(): string[] {

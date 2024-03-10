@@ -2,7 +2,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import type { GameObjectProps } from '../view';
 import { GameObject } from '../view';
 import type { AnimationAction, Group, Object3D, Object3DEventMap } from 'three';
-import { AnimationMixer, TextureLoader } from 'three';
+import { AnimationMixer } from 'three';
 import { getSkeletonBundle } from './bundles';
 
 export type GameAssetGroup = {
@@ -19,15 +19,15 @@ export type GameAssetProps = {
     onAttached?: (object: Object3D) => void;
 };
 
+type LoadedAssetProps = {
+    modelObject: Group<Object3DEventMap>;
+    actions: AnimationAction[];
+    attachTo?: string;
+    onAttached?: (object: Object3D) => void;
+    mixer: AnimationMixer;
+};
+
 export class Loader extends FBXLoader {
-    private readonly mixers: AnimationMixer[];
-
-    constructor({ mixers }: { mixers: AnimationMixer[] }) {
-        super();
-
-        this.mixers = mixers;
-    }
-
     public async loadGameAssets({
         assetsGroup,
         loadDefaults = true,
@@ -41,12 +41,7 @@ export class Loader extends FBXLoader {
         if (loadDefaults) assetsGroup.push(getSkeletonBundle());
 
         for (const group of assetsGroup) {
-            const objectsAndActions: {
-                modelObject: Object3D;
-                actions: AnimationAction[];
-                attachTo?: string;
-                onAttached?: (object: Object3D) => void;
-            }[] = [];
+            const objectsAndActions: LoadedAssetProps[] = [];
 
             for (const asset of group.assets) {
                 const loadedObject = await this.loadAsset(asset);
@@ -54,19 +49,20 @@ export class Loader extends FBXLoader {
             }
 
             const gameObjectProps: GameObjectProps[] = [];
-            objectsAndActions.forEach((pair, index) => {
+            objectsAndActions.forEach((prop, index) => {
                 gameObjectProps.push({
-                    name: pair.modelObject.name,
-                    object: pair.modelObject,
-                    actions: pair.actions,
+                    name: prop.modelObject.name,
+                    object: prop.modelObject,
+                    actions: prop.actions,
+                    mixer: prop.mixer,
                     attachTo:
                         index === 0
                             ? undefined
-                            : pair.attachTo
-                              ? this.findObjectByName(pair.attachTo, gameObjectProps[0].object)
+                            : prop.attachTo
+                              ? this.findObjectByName(prop.attachTo, gameObjectProps[0].object)
                               : gameObjectProps[0].object,
                 });
-                pair.onAttached?.(pair.modelObject);
+                prop.onAttached?.(prop.modelObject);
             });
             gameObjects.push(new GameObject({ gameObjectProps }));
         }
@@ -84,47 +80,31 @@ export class Loader extends FBXLoader {
         return object;
     }
 
-    private async loadAsset(asset: GameAssetProps): Promise<{
-        modelObject: Group<Object3DEventMap>;
-        actions: AnimationAction[];
-        attachTo?: string;
-        onAttached?: (object: Object3D) => void;
-    }> {
+    private async loadAsset(asset: GameAssetProps): Promise<LoadedAssetProps> {
         const modelObject = await this.loadAsync(asset.modelPath);
         if (!modelObject) throw Error(`Failed to load asset: ${asset.name}`);
 
         const actions: AnimationAction[] = [];
 
         modelObject.name = asset.name;
+        const mixer = new AnimationMixer(modelObject);
 
         if (asset.animationPaths.length > 0) {
-            const mixer = new AnimationMixer(modelObject);
             for (const path of asset.animationPaths) {
                 const animationObject = await this.loadAsync(path);
 
                 if (animationObject) {
-                    this.mixers.push(mixer);
                     actions.push(mixer.clipAction(animationObject.animations[0]));
                 }
             }
         }
-
-        modelObject.traverse((child: any) => {
-            if (child.isMesh) {
-                const texture = new TextureLoader().load(asset.texturePath);
-                child.castShadow = true;
-                child.receiveShadow = false;
-                child.flatshading = true;
-                child.material.map = texture;
-                child.material.needsUpdate = true;
-            }
-        });
 
         return {
             modelObject,
             actions,
             attachTo: asset.attachTo,
             onAttached: asset.onAttached,
+            mixer,
         };
     }
 }
