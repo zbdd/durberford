@@ -1,9 +1,8 @@
 import type { AnimationAction, Object3D } from 'three';
 import { AnimationMixer, TextureLoader } from 'three';
-import type { GameAssetGroup } from '../loader.ts';
 import type { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
-type LoadAssetProps = {
+type LoadableAssets = {
     modelPath: string;
     texturePath: string;
     animationPaths: string[];
@@ -11,7 +10,7 @@ type LoadAssetProps = {
     name: string;
 };
 
-export type LoadedAssetProps = {
+export type LoadedAsset = {
     model: Object3D;
     name: string;
     mixer: AnimationMixer;
@@ -25,14 +24,15 @@ export class UnitAsset {
         this.loader = loader;
     }
 
-    public async load(): Promise<LoadedAssetProps> {
+    public async load(): Promise<LoadedAsset> {
         const assetsToLoad = this.getAssetsToLoad();
-        const children: LoadedAssetProps[] = [];
-        let parent: LoadedAssetProps | undefined = undefined;
+        const children: LoadedAsset[] = [];
+        let parent: LoadedAsset | undefined = undefined;
 
         for (const childAsset of assetsToLoad) {
             const model = await this.loader.loadAsync(childAsset.modelPath);
             const mixer = new AnimationMixer(model);
+            const nameOfBone = childAsset.attachToBone;
 
             this.attachTextureToModel(model, childAsset.texturePath);
             const animations = this.attachAnimationsToMixer(mixer, childAsset.animationPaths);
@@ -45,8 +45,14 @@ export class UnitAsset {
                 mixer,
             };
 
-            if (parent && childAsset.attachToBone) {
-                void '';
+            if (parent && nameOfBone) {
+                const bone = this.findObjectByName(nameOfBone, parent.model);
+                console.log(nameOfBone, bone, model);
+                if (bone) {
+                    bone.add(model);
+                    model.rotateY(90);
+                    model.rotateZ(90);
+                }
             } else if (parent) {
                 parent.model.add(loadedAsset.model);
             }
@@ -60,6 +66,16 @@ export class UnitAsset {
         if (!parent) throw Error(`Failed to create UnitAsset`);
 
         return parent;
+    }
+
+    private findObjectByName(name: string, objectToSearch: Object3D): Object3D | undefined {
+        let object: Object3D | undefined;
+
+        objectToSearch.traverse((child) => {
+            if (child.name.trim() === name) object = child;
+        });
+
+        return object;
     }
 
     private attachTextureToModel(model: Object3D, texturePath: string): void {
@@ -84,7 +100,7 @@ export class UnitAsset {
         return animations;
     }
 
-    public getAssetsToLoad(): LoadAssetProps[] {
+    public getAssetsToLoad(): LoadableAssets[] {
         return [
             {
                 modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_body_mesh.fbx',
@@ -108,36 +124,6 @@ export class UnitAsset {
         ];
     }
 }
-export const getSkeletonBundle = (): GameAssetGroup => {
-    return {
-        name: 'SkeletonWarrior',
-        assets: [
-            {
-                modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_body_mesh.fbx',
-                texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_body_D.png',
-                name: 'skeleton-body',
-                animationPaths: getAnimations(),
-            },
-            {
-                modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_set1_mesh.fbx',
-                texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_set1_D.png',
-                name: 'skeleton-clothing',
-                animationPaths: getAnimations(),
-            },
-            {
-                modelPath: 'assets/units/SkeletonWarrior_2HandAxe/Models/skeleton_2h_axe.fbx',
-                texturePath: 'assets/units/SkeletonWarrior_2HandAxe/Textures/skeleton_2HAxe_D.png',
-                name: 'skeleton-axe',
-                attachTo: 'weapon_end',
-                animationPaths: [],
-                onAttached: (object: Object3D) => {
-                    object.rotateY(90);
-                    object.rotateZ(90);
-                },
-            },
-        ],
-    };
-};
 
 const getAnimations = () => {
     return [

@@ -3,7 +3,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { View } from './view';
 import { UnitAsset } from './loader';
-import type { LoadedAssetProps } from './loader/bundles/skeleton-bundle.ts';
+import type { LoadedAsset } from './loader/bundles/skeleton-bundle.ts';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 const clock = new Clock();
@@ -19,11 +19,9 @@ const view = new View();
 
 const gameWrapper = document.createElement('div');
 
-const gameObjects: LoadedAssetProps[] = [];
+const gameObjects: LoadedAsset[] = [];
 
 const loadObjects = async (): Promise<void> => {
-    // gameObjects.push(...(await loader.loadGameAssets({})));
-    // gameObjects.forEach((gameObject) => view.add(gameObject));
     const loader = new FBXLoader();
     const asset = new UnitAsset(loader);
     const skeleton = await asset.load();
