@@ -1,6 +1,7 @@
 import type { AnimationAction, Object3D } from 'three';
 import { AnimationMixer, TextureLoader } from 'three';
 import type { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { GameObject } from '../../view';
 
 type LoadableAssets = {
     modelPath: string;
@@ -14,7 +15,7 @@ export type LoadedAsset = {
     model: Object3D;
     name: string;
     mixer: AnimationMixer;
-    animations: AnimationAction[];
+    actions: AnimationAction[];
 };
 
 export class UnitAsset {
@@ -24,10 +25,11 @@ export class UnitAsset {
         this.loader = loader;
     }
 
-    public async load(): Promise<LoadedAsset> {
+    public async load(): Promise<GameObject> {
         const assetsToLoad = this.getAssetsToLoad();
-        const children: LoadedAsset[] = [];
-        let parent: LoadedAsset | undefined = undefined;
+        const children: GameObject[] = [];
+        let parent: GameObject | undefined = undefined;
+        const actions: AnimationAction[] = [];
 
         for (const childAsset of assetsToLoad) {
             const model = await this.loader.loadAsync(childAsset.modelPath);
@@ -35,36 +37,36 @@ export class UnitAsset {
             const nameOfBone = childAsset.attachToBone;
 
             this.attachTextureToModel(model, childAsset.texturePath);
-            const animations = this.attachAnimationsToMixer(mixer, childAsset.animationPaths);
+            actions.push(...(await this.attachAnimationsToMixer(mixer, childAsset.animationPaths)));
             const name = childAsset.name;
 
-            const loadedAsset = {
+            const newObject = new GameObject({
                 model,
-                animations,
+                actions,
                 name,
                 mixer,
-            };
+            });
 
             if (parent && nameOfBone) {
-                const bone = this.findObjectByName(nameOfBone, parent.model);
-                console.log(nameOfBone, bone, model);
+                const bone = this.findObjectByName(nameOfBone, parent);
                 if (bone) {
                     bone.add(model);
                     model.rotateY(90);
                     model.rotateZ(90);
                 }
             } else if (parent) {
-                parent.model.add(loadedAsset.model);
+                parent.add(newObject);
             }
 
             if (!parent) {
-                parent = loadedAsset;
+                parent = newObject;
             } else {
-                children.push(loadedAsset);
+                children.push(newObject);
             }
         }
         if (!parent) throw Error(`Failed to create UnitAsset`);
 
+        parent.addChildren(children);
         return parent;
     }
 
@@ -91,13 +93,13 @@ export class UnitAsset {
         });
     }
 
-    private attachAnimationsToMixer(mixer: AnimationMixer, animationPaths: string[]): AnimationAction[] {
-        const animations: AnimationAction[] = [];
-        animationPaths.map(async (paths) => {
-            const animation = await this.loader.loadAsync(paths);
-            animations.push(mixer.clipAction(animation.animations[0]));
-        });
-        return animations;
+    private async attachAnimationsToMixer(mixer: AnimationMixer, animationPaths: string[]): Promise<AnimationAction[]> {
+        return await Promise.all(
+            animationPaths.map(async (paths) => {
+                const animation = await this.loader.loadAsync(paths);
+                return mixer.clipAction(animation.animations[0]);
+            }),
+        );
     }
 
     public getAssetsToLoad(): LoadableAssets[] {

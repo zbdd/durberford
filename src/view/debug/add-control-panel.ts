@@ -67,7 +67,7 @@ export const addControlPanel = ({
         })
         .on('click', () => {
             gameObject.stopActions(1);
-            gameObject.playAction(animationState.name, 1, true);
+            gameObject.playAction(animationState.name, 1);
         });
     unitPage
         .addButton({

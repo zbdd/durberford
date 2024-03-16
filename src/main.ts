@@ -1,10 +1,11 @@
 import { Clock, PerspectiveCamera, WebGLRenderer } from 'three';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import type { GameObject } from './view';
 import { View } from './view';
 import { UnitAsset } from './loader';
-import type { LoadedAsset } from './loader/bundles/skeleton-bundle.ts';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { addControlPanel } from './view/debug';
 
 const clock = new Clock();
 
@@ -19,14 +20,14 @@ const view = new View();
 
 const gameWrapper = document.createElement('div');
 
-const gameObjects: LoadedAsset[] = [];
+const gameObjects: GameObject[] = [];
 
 const loadObjects = async (): Promise<void> => {
     const loader = new FBXLoader();
     const asset = new UnitAsset(loader);
     const skeleton = await asset.load();
     gameObjects.push(skeleton);
-    view.add(skeleton.model);
+    view.add(skeleton);
 };
 
 void loadObjects().then(() => {
@@ -59,9 +60,9 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
 
-    const delta = clock.getDelta() * 0.0666;
+    const delta = clock.getDelta();
 
-    gameObjects.forEach((gameObject) => gameObject.mixer.update(delta));
+    gameObjects.forEach((gameObject) => gameObject.update(delta));
     renderer.render(view, camera);
 
     stats.update();
@@ -74,7 +75,7 @@ function render() {
 animate();
 
 function createControlPanel() {
-    // const controlPanel = addControlPanel({ view, gameObject: gameObjects[0], animations: gameObjects[0].getActions() });
-    // gameWrapper.appendChild(controlPanel.button);
+    const controlPanel = addControlPanel({ view, gameObject: gameObjects[0], animations: gameObjects[0].getActions() });
+    gameWrapper.appendChild(controlPanel.button);
     document.body.appendChild(gameWrapper);
 }

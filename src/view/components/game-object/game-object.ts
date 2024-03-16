@@ -2,46 +2,36 @@ import type { AnimationAction, AnimationMixer, Object3D } from 'three';
 import { Group } from 'three';
 
 export type GameObjectProps = {
+    model: Object3D;
     name: string;
-    object: Object3D;
     mixer: AnimationMixer;
     actions: AnimationAction[];
-    attachTo?: Object3D;
+    children?: GameObject[];
 };
 
 export class GameObject extends Group {
     private actions: AnimationAction[];
     private readonly mixer: AnimationMixer;
     private readonly actionPlaying: AnimationAction | undefined;
-    private readonly children: GameObject[];
+    private readonly gameObjects: GameObject[];
 
-    constructor({ gameObjectProps }: { gameObjectProps: GameObjectProps[] }) {
+    constructor({ model, name, mixer, actions, children }: GameObjectProps) {
         super();
 
-        const gameObject = gameObjectProps.shift();
-        if (!gameObject) throw Error(`Cannot instantiate GameObject without GameObjectProps`);
-
-        console.log(gameObject);
-        this.name = gameObject.name;
-        this.mixer = gameObject.mixer;
-        this.add(gameObject.object);
-
-        this.children = [];
-        this.actions = [];
-        this.actionPlaying = undefined;
-
-        gameObjectProps.forEach((nextObject) => {
-            if (nextObject.attachTo) nextObject.attachTo.add(nextObject.object);
-            else this.add(nextObject.object);
-
-            this.actions.push(...nextObject.actions);
-            this.children.push(new GameObject({ gameObjectProps: [nextObject] }));
-        });
+        this.actions = actions;
+        this.name = name;
+        this.mixer = mixer;
+        this.gameObjects = children ?? [];
+        this.add(model);
     }
 
     public update(deltaSec: number): void {
         this.mixer.update(deltaSec);
-        this.children.forEach((child) => child.update(deltaSec));
+        this.gameObjects.forEach((child) => child.update(deltaSec));
+    }
+
+    public addChildren(children: GameObject[]): void {
+        this.gameObjects.push(...children);
     }
 
     public getActions(): string[] {
@@ -58,15 +48,16 @@ export class GameObject extends Group {
     }
 
     public stopActions(fadeDurationSeconds = 0): void {
-        this.actions.forEach((action, index) => {
+        this.actions.forEach((action) => {
             if (action.isRunning() && fadeDurationSeconds > 0) {
                 action.fadeOut(fadeDurationSeconds);
-                setTimeout(() => this.actions[index].stop(), fadeDurationSeconds * 1000);
+                // setTimeout(() => this.actions[index].stop(), fadeDurationSeconds * 1000);
             } else action.stop();
         });
+        this.gameObjects.forEach((child) => child.stopActions(fadeDurationSeconds));
     }
 
-    public playAction(name: string, fadeInDuration = 0, isLoop: boolean): void {
+    public playAction(name: string, fadeInDuration = 0): void {
         this.actions.forEach((action) => {
             if (action.getClip().name === name && !action.isRunning()) {
                 if (fadeInDuration > 0) {
@@ -76,5 +67,6 @@ export class GameObject extends Group {
                 action.play();
             }
         });
+        this.gameObjects.forEach((child) => child.playAction(name, fadeInDuration));
     }
 }
